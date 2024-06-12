@@ -94,33 +94,33 @@ const myPost = (req,res)=>{
     });
 }
 const editPost = (req, res) => {
-    Post
-    .findByIdAndUpdate(
-        { _id : req.params.id },
-        {   
-        
-            title: req.body.title,
-            content: req.body.content,
-            image: req.file,
+    upload(req, res, (err) => {
+        if (err) {
             
+            return res.json({ status: 500, msg: "File upload failed", error: err });
         }
-    )
-    .exec()
-    .then((data) => {
-        res.json({
-            status: 200,
-            msg: "Updated successfully",
-            data:data
-        });
-    })
-    .catch((err) => {
-        res.json({
-            status: 500,
-            msg: "Data not Updated",
-            Error: err,
-        });
+        Post
+            .findById(req.params.id)
+            .then((post) => {
+                if (!post) {
+                    return res.json({ status: 404, msg: "Post not found" });
+                }
+                post.title = req.body.title;
+                post.content = req.body.content;
+                if (req.file) {
+                    post.image = req.file;
+                }
+                return post.save();
+            })
+            .then((updatedPost) => {
+                res.json({ status: 200, msg: "Post updated successfully", data: updatedPost });
+            })
+            .catch((err) => {
+                res.json({ status: 500, msg: "Failed to update post", error: err });
+            });
     });
 };
+
 const postidfetch = (req,res) =>{
     Post
     .findById({ _id: req.params.id })
